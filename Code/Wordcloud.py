@@ -7,9 +7,9 @@ import numpy as np
 from nltk.corpus import stopwords
 
 
-text = open('Data.txt').read()
+text = open('Wordcloud/Data.txt').read()
 
-background_Image = np.array(Image.open("background.png"))
+background_Image = np.array(Image.open("Wordcloud/background.png"))
 img_colors = ImageColorGenerator(background_Image)
 stopwords = set(stopwords.words('English'))
 
