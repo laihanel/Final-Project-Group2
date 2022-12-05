@@ -18,8 +18,10 @@ from collections import defaultdict
 from textblob import TextBlob
 import spacy
 
+
 # =================================================================================
 nltk.download('stopwords')
+nltk.download('punkt')
 stop_words = nltk.corpus.stopwords.words('english')
 nlp = spacy.load("en_core_web_sm")
 pd.set_option('display.expand_frame_repr', False)
@@ -33,10 +35,15 @@ MAX_VOCAB_SIZE = 25_000
 N_EPOCHS = 5
 best_valid_loss = float('inf')
 
-sub1 = pd.read_csv("MacOS_submission.csv")
-sub2 = pd.read_csv("windows_submission.csv")
-com1 = pd.read_csv("MacOS_comments.csv")
-com2 = pd.read_csv("windows_comments.csv")
+# sub1 = pd.read_csv("MacOS_submission.csv")
+# sub2 = pd.read_csv("windows_submission.csv")
+sub1 = pd.read_csv(r'../Data/MacOS_submission.csv', encoding='utf-8')
+sub2 = pd.read_csv(r'../Data/windows_submission.csv', encoding='utf-8')
+
+# com1 = pd.read_csv("MacOS_comments.csv")
+# com2 = pd.read_csv("windows_comments.csv")
+com1 = pd.read_csv(r'../Data/windows_comments.csv', encoding='utf-8')
+com2 = pd.read_csv(r'../Data/MacOS_comments.csv', encoding='utf-8')
 
 # Removes everything but the features we are interested in.
 sub1 = sub1[['author', 'created_utc', 'id', 'num_comments', 'over_18',
@@ -177,10 +184,10 @@ for word in corpus:
 
 counter = Counter(corpus)
 most = counter.most_common()
-
+nltk.download('averaged_perceptron_tagger')
 x, y = [], []
 for word, count in most[:80]:
-    if (word not in stop_words):
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1]) == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
@@ -205,7 +212,7 @@ most = counter.most_common()
 
 x, y = [], []
 for word, count in most[:80]:
-    if (word not in stop_words):
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
@@ -231,7 +238,7 @@ most = counter.most_common()
 
 x, y = [], []
 for word, count in most[:80]:
-    if (word not in stop_words):
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
@@ -257,7 +264,7 @@ most = counter.most_common()
 
 x, y = [], []
 for word, count in most[:80]:
-    if (word not in stop_words):
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
