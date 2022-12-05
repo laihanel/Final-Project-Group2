@@ -187,7 +187,7 @@ most = counter.most_common()
 nltk.download('averaged_perceptron_tagger')
 x, y = [], []
 for word, count in most[:80]:
-    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1]) == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
