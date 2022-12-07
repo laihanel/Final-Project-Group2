@@ -34,7 +34,7 @@ BATCH_SIZE = 64
 MAX_VOCAB_SIZE = 25_000
 N_EPOCHS = 5
 best_valid_loss = float('inf')
-
+'''
 # sub1 = pd.read_csv("MacOS_submission.csv")
 # sub2 = pd.read_csv("windows_submission.csv")
 sub1 = pd.read_csv(r'../Data/MacOS_submission.csv', encoding='utf-8')
@@ -64,6 +64,11 @@ comments = pd.concat([com1, com2], ignore_index=True)
 submission = submission.drop(submission[(submission['body'] == '[removed]') | (submission['body'] == '')].index)
 ### drop nan
 submission = submission.dropna()
+'''
+
+submission = pd.read_csv(r'../Data/submissions_tokenized.csv', encoding='utf-8')
+comments = pd.read_csv(r'../Data/comments_tokenized.csv', encoding='utf-8')
+
 
 ## count
 submission["sent_len"] = [len(sent_tokenize(x)) for x in submission['body']]
@@ -309,7 +314,7 @@ show_wordcloud(str(submission[submission['subreddit'] == "windows"]['body']), "W
 show_wordcloud(str(comments[comments['subreddit'] == "MacOS"]['body']), "MacOS", "Comments")
 show_wordcloud(str(comments[comments['subreddit'] == "windows"]['body']), "Windows", "Comments")
 
-
+'''
 # =================================================================================
 # Sentiment analysis
 
@@ -475,3 +480,4 @@ sns.barplot(x=y_sub_mac, y=x_sub_mac)
 sns.barplot(x=y_com_win, y=x_com_win)
 sns.barplot(x=y_com_mac, y=x_com_mac)
 plt.show()
+'''

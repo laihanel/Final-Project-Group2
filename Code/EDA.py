@@ -62,3 +62,9 @@ plt.tight_layout()
 plt.show()
 
 
+'''
+Read Tokenization data
+'''
+submission = pd.read_csv(r'../Data/submissions_tokenized.csv', encoding='utf-8')
+comments = pd.read_csv(r'../Data/comments_tokenized.csv', encoding='utf-8')
+
