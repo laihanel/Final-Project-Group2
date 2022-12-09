@@ -47,13 +47,13 @@ def compute_metrics(eval_pred):
 
 
 
-repo_name = "finetuning-sentiment-model-imdb"
+repo_name = "laihanel/sentiment-analysis_gwu"
 
 training_args = TrainingArguments(
     output_dir=repo_name,
     learning_rate=2e-5,
-    per_device_train_batch_size=16,
-    per_device_eval_batch_size=16,
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=8,
     num_train_epochs=2,
     weight_decay=0.01,
     save_strategy="epoch",
