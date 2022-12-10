@@ -10,9 +10,11 @@ from datasets import load_metric
 from datasets import load_dataset
 imdb = load_dataset("imdb")
 
-small_train_dataset = imdb["train"].shuffle(seed=42).select([i for i in list(range(3000))])
-small_test_dataset = imdb["test"].shuffle(seed=42).select([i for i in list(range(300))])
+# small_train_dataset = imdb["train"].shuffle(seed=42).select([i for i in list(range(3000))])
+# small_test_dataset = imdb["test"].shuffle(seed=42).select([i for i in list(range(300))])
 
+small_train_dataset = imdb["train"].shuffle(seed=42)
+small_test_dataset = imdb["test"].shuffle(seed=42)
 
 tokenizer = AutoTokenizer.from_pretrained("distilbert-base-uncased")
 
@@ -71,7 +73,7 @@ trainer = Trainer(
 )
 
 
-trainer.train()
+# trainer.train()
 trainer.evaluate()
 trainer.push_to_hub()
 

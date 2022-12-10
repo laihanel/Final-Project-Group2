@@ -219,8 +219,8 @@ max_features = 10000
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=max_features)
 
 # remove the first integer token which is a special character that marks the beginning of the sentence
-x_train = [x[1:] for x in x_train[0:1000, ]]
-y_train = y_train[0:1000, ]
+x_train = [x[1:] for x in x_train[0:100000, ]]
+y_train = y_train[0:100000, ]
 x_test = [x[1:] for x in x_test[0:100, ]]
 y_test = y_test[0:100, ]
 
@@ -232,7 +232,8 @@ reverse_index = {value: key.lower() for (key, value) in imdb.get_word_index().it
 # choose whether to use the BERT or distilBERT model by selecting the appropriate name
 # model_name = 'distilbert-base-uncased'
 # model_name = 'bert-base-uncased'
-model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+model_name = 'roberta-base'
+# model_name = "cardiffnlp/twitter-roberta-base-sentiment"
 
 # load model and tokenizer
 # model = TFAutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
@@ -259,9 +260,16 @@ elif model_name == 'distilbert-base-uncased':
     num_warmup_steps = 0
     num_train_steps = int(np.ceil(len(x_train) / batch_size))
     power = 1.0
+elif model_name == 'roberta-base':
+    init_lr = 5e-05
+    min_lr_ratio = 0
+    batch_size = 16
+    num_warmup_steps = 0
+    num_train_steps = int(np.ceil(len(x_train) / batch_size))
+    power = 1.0
 
 elif model_name == 'cardiffnlp/twitter-roberta-base-sentiment':
-    # training parameters: https://huggingface.co/lvwerra/distilbert-imdb
+    # training parameters: https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment
     init_lr = 5e-05
     min_lr_ratio = 0
     batch_size = 16
@@ -295,10 +303,10 @@ test_ds = tf.data.Dataset.from_tensor_slices(((*X_test.values(), ), y_test))
 test_ds = test_ds.batch(batch_size)
 
 
-filepath = './model_transformers/'  # change to desired save directory
+filepath = './Checkpoints/'  # change to desired save directory
 checkpoint_path = os.path.join(filepath, model_name)
-load_model = True
-pretrained_model = True
+load_model = False
+pretrained_model = False
 
 # define linear learning schedules
 lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
@@ -380,6 +388,9 @@ elif model_name == 'cardiffnlp/twitter-roberta-base-sentiment':
     layer = auto_model.layers[0].layers[0].embeddings
     # layer = auto_model.layers[0].layers[0].transformer.layer[0]
 
+elif model_name == 'roberta-base':
+    layer = auto_model.layers[0].layers[0].embeddings
+
 else:
     raise ValueError('Unknown model name.')
 
@@ -432,5 +443,5 @@ html_str = '<br><br>'.join(res).encode('utf-8').strip()
 
 # https://docs.seldon.io/projects/alibi/en/stable/examples/integrated_gradients_transformers.html
 
-with open("Results.html", 'w', encoding='utf-8') as my_file:
+with open("Results/Results_trained.html", 'w', encoding='utf-8') as my_file:
     my_file.write(html_str.decode('utf-8'))
