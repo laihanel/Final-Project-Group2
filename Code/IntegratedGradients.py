@@ -7,17 +7,18 @@ import matplotlib.cm
 from tqdm import tqdm
 from typing import Optional, Union, List, Dict, Tuple
 from IPython.display import HTML
-
+import pandas as pd
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.datasets import imdb
+from sklearn.model_selection import train_test_split
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing import sequence
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import SparseCategoricalCrossentropy
 
 from transformers.optimization_tf import WarmUp
-from transformers import TFAutoModelForSequenceClassification, AutoTokenizer, PreTrainedTokenizer
+from transformers import TFAutoModelForSequenceClassification, AutoTokenizer, PreTrainedTokenizer, AutoModelForSequenceClassification
 
 from alibi.explainers import IntegratedGradients
 
@@ -150,7 +151,8 @@ def display(X: np.ndarray,
     pred
         Classification label (prediction) for the given instance.
     """
-    pred_dict = {1: 'Positive review', 0: 'Negative review'}
+    # pred_dict = {1: 'Positive', 0: 'Negative'}
+    pred_dict = {0: 'Negative', 1: 'Neutral', 2:"Positive"}
 
     # remove padding
     fst_pad_indices = np.where(X ==tokenizer.pad_token_id)[0]
@@ -158,11 +160,14 @@ def display(X: np.ndarray,
         X, attrs = X[:fst_pad_indices[0]], attrs[:fst_pad_indices[0]]
 
     # decode tokens and get colors
-    tokens = [tokenizer.decode([X[i]]) for i in range(len(X))]
-    colors = colorize(attrs)
+    tokens = [tokenizer.decode([X[i]]) for i in range(len(X))][1:-1]
+    colors = colorize(attrs)[1:-1]
 
     print(f'Predicted label =  {pred}: {pred_dict[pred]}')
-    return HTML("".join(list(map(hlstr, tokens, colors))))
+    # html_results = HTML("".join(list(map(hlstr, tokens, colors))))
+    html_text = "".join(list(map(hlstr, tokens, colors)))
+    out_text = '<b>' + f'Predicted {pred_dict[pred]}' + r'<b>' + '&nbsp;&nbsp;&nbsp;&nbsp;' + html_text
+    return out_text
 
 class AutoModelWrapper(keras.Model):
     def __init__(self, transformer: keras.Model, **kwargs):
@@ -207,29 +212,31 @@ class AutoModelWrapper(keras.Model):
 
 ############################ imdb data example
 
-
 # constants
 max_features = 10000
 
-# load imdb reviews datasets.
+# # load imdb reviews datasets.
 (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=max_features)
 
 # remove the first integer token which is a special character that marks the beginning of the sentence
-x_train = [x[1:] for x in x_train]
-x_test = [x[1:] for x in x_test]
-# small_train_dataset = imdb["train"].shuffle(seed=42).select([i for i in list(range(3000))])
-# small_test_dataset = imdb["test"].shuffle(seed=42).select([i for i in list(range(300))])
+x_train = [x[1:] for x in x_train[0:1000, ]]
+y_train = y_train[0:1000, ]
+x_test = [x[1:] for x in x_test[0:100, ]]
+y_test = y_test[0:100, ]
+
 
 
 # get mappings. The keys are transformed to lower case since we will use uncased models.
 reverse_index = {value: key.lower() for (key, value) in imdb.get_word_index().items()}
 
 # choose whether to use the BERT or distilBERT model by selecting the appropriate name
-model_name = 'distilbert-base-uncased'
+# model_name = 'distilbert-base-uncased'
 # model_name = 'bert-base-uncased'
+model_name = "cardiffnlp/twitter-roberta-base-sentiment"
 
 # load model and tokenizer
-model = TFAutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+# model = TFAutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
+model = TFAutoModelForSequenceClassification.from_pretrained(model_name)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 # define maximum input length
@@ -240,7 +247,7 @@ if model_name == 'bert-base-uncased':
     init_lr = 5e-05
     min_lr_ratio = 0
     batch_size = 8
-    num_warmup_steps = 1546
+    num_warmup_steps = 10 # 1546
     num_train_steps = 10 # 15468
     power = 1.0
 
@@ -253,6 +260,14 @@ elif model_name == 'distilbert-base-uncased':
     num_train_steps = int(np.ceil(len(x_train) / batch_size))
     power = 1.0
 
+elif model_name == 'cardiffnlp/twitter-roberta-base-sentiment':
+    # training parameters: https://huggingface.co/lvwerra/distilbert-imdb
+    init_lr = 5e-05
+    min_lr_ratio = 0
+    batch_size = 16
+    num_warmup_steps = 0
+    num_train_steps = int(np.ceil(len(x_train) / batch_size))
+    power = 1.0
 else:
     raise ValueError('Unknown model name.')
 
@@ -282,7 +297,8 @@ test_ds = test_ds.batch(batch_size)
 
 filepath = './model_transformers/'  # change to desired save directory
 checkpoint_path = os.path.join(filepath, model_name)
-load_model = False
+load_model = True
+pretrained_model = True
 
 # define linear learning schedules
 lr_schedule = tf.keras.optimizers.schedules.PolynomialDecay(
@@ -311,6 +327,13 @@ if not load_model:
     # fit and save the model
     model.fit(x=train_ds, validation_data=test_ds, steps_per_epoch=num_train_steps)
     model.save_pretrained(checkpoint_path)
+elif pretrained_model == True:
+    model = model.from_pretrained(model_name)
+    model.compile(
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=tf.metrics.SparseCategoricalAccuracy(),
+    )
+    model.evaluate(test_ds)
 else:
     # load and compile the model
     model = model.from_pretrained(checkpoint_path)
@@ -318,7 +341,6 @@ else:
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=tf.metrics.SparseCategoricalAccuracy(),
     )
-
     # evaluate the model
     model.evaluate(test_ds)
 
@@ -331,8 +353,18 @@ text_samples = [decode_sentence(x_test[i], reverse_index, unk_token=tokenizer.un
 # inlcude your text here
 text_samples.append("best movie i've ever seen nothing bad to say about it")
 
+sub1 = pd.read_csv(r'../Data/MacOS_submission.csv', encoding='utf-8')
+sub2 = pd.read_csv(r'../Data/windows_submission.csv', encoding='utf-8')
+
+submission = pd.concat([sub1, sub2],ignore_index=True)
+
+# submission['body'] = submission['title'].astype(str) + ' ' + submission['selftext'].astype(str)
+submission['body'] = submission['title']
+
+text_samples2 = submission['body'].tolist()
+
 # process input before passing it to the explainer
-X_test, kwargs = process_input(sentence=text_samples,
+X_test, kwargs = process_input(sentence=text_samples2[6:12] + text_samples2[-9:-3],
                                tokenizer=tokenizer,
                                max_len=max_len)
 
@@ -341,6 +373,10 @@ if model_name == 'bert-base-uncased':
     # layer = auto_model.layers[0].layers[0].encoder.layer[2]
 
 elif model_name == 'distilbert-base-uncased':
+    layer = auto_model.layers[0].layers[0].embeddings
+    # layer = auto_model.layers[0].layers[0].transformer.layer[0]
+
+elif model_name == 'cardiffnlp/twitter-roberta-base-sentiment':
     layer = auto_model.layers[0].layers[0].embeddings
     # layer = auto_model.layers[0].layers[0].transformer.layer[0]
 
@@ -383,10 +419,18 @@ attrs = attrs.sum(axis=2)
 print('Attributions shape:', attrs.shape)
 
 ########### Check attributions for our example
-index = -1
-display(X=X_test[index], attrs=attrs[index], pred=predictions[index], tokenizer=tokenizer)
+res = []
+for index in range(X_test.shape[0]):
+    res1 = display(X=X_test[index], attrs=attrs[index], pred=predictions[index], tokenizer=tokenizer)
+    res.append(res1)
+html_str = '<br><br>'.join(res).encode('utf-8').strip()
 
 
-########### Check attribution for some test examples
-index = 0
-display(X=X_test[index], attrs=attrs[index], pred=predictions[index], tokenizer=tokenizer)
+# ########### Check attribution for some test examples
+# index = 0
+# res2 = display(X=X_test[index], attrs=attrs[index], pred=predictions[index], tokenizer=tokenizer)
+
+# https://docs.seldon.io/projects/alibi/en/stable/examples/integrated_gradients_transformers.html
+
+with open("Results.html", 'w', encoding='utf-8') as my_file:
+    my_file.write(html_str.decode('utf-8'))
