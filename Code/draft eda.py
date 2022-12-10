@@ -18,7 +18,6 @@ from collections import defaultdict
 from textblob import TextBlob
 import spacy
 
-
 # =================================================================================
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -65,30 +64,41 @@ submission = submission.drop(submission[(submission['body'] == '[removed]') | (s
 ### drop nan
 submission = submission.dropna()
 '''
-
+# %%
 submission = pd.read_csv(r'../Data/submissions_tokenized.csv', encoding='utf-8')
 comments = pd.read_csv(r'../Data/comments_tokenized.csv', encoding='utf-8')
 
+
+## submission
+
+submission= submission.drop(submission[(submission['body'] == '[removed]') |
+                                       (submission['body'] == ' ') |
+                                       (submission['body'] == 'remove')].index)
+### drop nan
+submission= submission.dropna()
 
 ## count
 submission["sent_len"] = [len(sent_tokenize(x)) for x in submission['body']]
 submission["word_count"] = [len(word_tokenize(x)) for x in submission['body']]
 submission["word_avg_len"] = [sum(map(len, x.split())) / len(x.split()) for x in submission['body']]
 
-plt.figure()
-submission["sent_len"].hist(bins=100)
-plt.title("Histogram of sentence length in Submissions")
-plt.xlabel("Sentence Length")
-plt.ylabel("Frequency")
-plt.show()
+fig, axs = plt.subplots(1, 3, sharey=True, tight_layout=True, figsize=(16, 6))
+# plt.figure(figsize=(8,8))
+axs[0].hist(submission["sent_len"], bins=100, range=(0, 30))
+axs[1].hist(submission["word_count"], bins=100, range=(0, 200))
+axs[2].hist(submission["word_avg_len"], bins=100, range=(0, 20))
+# axs[0].set_title("Histogram of Sentence Length in Submissions", size=20)
+# axs[1].set_title("Histogram of Word Count in Submissions", size=20)
+# axs[2].set_title("Histogram of Word Average Length", size=20)
+axs[0].set_xlabel("Sentence Length", fontsize=20)
+axs[1].set_xlabel("Word Count", fontsize=20)
+axs[2].set_xlabel("Word Average Length", fontsize=20)
+axs[0].set_ylabel("Frequency", fontsize=20)
+axs[1].set_ylabel("Frequency", fontsize=20)
+axs[2].set_ylabel("Frequency", fontsize=20)
+fig.suptitle('Histogram of Text in Submission', size=20)
 plt.show()
 
-plt.figure()
-submission["word_count"].hist(bins=100)
-plt.title("Histogram of word count in Submissions")
-plt.xlabel("Word Count")
-plt.ylabel("Frequency")
-plt.show()
 
 submission['body'] = submission['body'].str.lower()
 
@@ -107,32 +117,50 @@ comments = comments.dropna()
 comments["sent_len"] = [len(sent_tokenize(x)) for x in comments['body']]
 comments["word_count"] = [len(word_tokenize(x)) for x in comments['body']]
 comments["word_avg_len"] = [sum(map(len, x.split())) / len(x.split()) for x in comments['body']]
+#
+# plt.figure(figsize=(8, 8))
+# comments["sent_len"].hist(bins=100, range=(0, 30))
+# plt.title("Histogram of sentence length in Commments", size=20)
+# plt.xlabel("Sentence Length", fontsize=20)
+# plt.ylabel("Frequency", fontsize=20)
+# plt.show()
+#
+# plt.figure(figsize=(8, 8))
+# comments["word_count"].hist(bins=100, range=(0, 300))
+# plt.title("Histogram of word count in Comments", size=20)
+# plt.xlabel("Word Count", fontsize=20)
+# plt.ylabel("Frequency", fontsize=20)
+# plt.show()
+#
+# ### average word length in each sentence
+# plt.figure(figsize=(8, 8))
+# comments["word_avg_len"].hist(bins=100, range=(0, 50))
+# plt.title("Histogram of word average length in Comments", size=20)
+# plt.xlabel("Word Average Length", fontsize=20)
+# plt.ylabel("Frequency", fontsize=20)
+# plt.show()
 
-plt.figure()
-comments["sent_len"].hist(bins=100)
-plt.title("Histogram of sentence length in Commments")
-plt.xlabel("Sentence Length")
-plt.ylabel("Frequency")
+fig, axs = plt.subplots(1, 3, sharey=True, tight_layout=True, figsize=(16, 6))
+# plt.figure(figsize=(8,8))
+axs[0].hist(comments["sent_len"], bins=100, range=(0, 30))
+axs[1].hist(comments["word_count"], bins=100, range=(0, 200))
+axs[2].hist(comments["word_avg_len"], bins=100, range=(0, 20))
+# axs[0].set_title("Histogram of Sentence Length in commentss", size=20)
+# axs[1].set_title("Histogram of Word Count in commentss", size=20)
+# axs[2].set_title("Histogram of Word Average Length", size=20)
+axs[0].set_xlabel("Sentence Length", fontsize=20)
+axs[1].set_xlabel("Word Count", fontsize=20)
+axs[2].set_xlabel("Word Average Length", fontsize=20)
+axs[0].set_ylabel("Frequency", fontsize=20)
+axs[1].set_ylabel("Frequency", fontsize=20)
+axs[2].set_ylabel("Frequency", fontsize=20)
+fig.suptitle('Histogram of Text in comments', size=20)
 plt.show()
 
-plt.figure()
-comments["word_count"].hist(bins=100)
-plt.title("Histogram of word count in Comments")
-plt.xlabel("Word Count")
-plt.ylabel("Frequency")
-plt.show()
-
-### average word length in each sentence
-plt.figure()
-comments["word_avg_len"].hist(bins=100)
-plt.title("Histogram of word average length in Comments")
-plt.xlabel("Word Average Length")
-plt.ylabel("Frequency")
-plt.show()
 
 comments['body'] = comments['body'].str.lower()
 # =================================================================================
-
+#%%
 target = "subreddit"
 
 ### Submission
@@ -146,7 +174,6 @@ print("Percentage of data showing real incidents \"target=MacOS\" in Submission 
 target_count = submission[submission[target] == "windows"][target].count()
 total = submission[target].count()
 print("Percentage of data showing real incidents \"target=windows\" in Submission {0:.2f}".format(target_count / total))
-
 
 ###Comments
 print("Comments", comments.groupby(target)[target].count())
@@ -172,12 +199,18 @@ print("Percentage of data showing real incidents \"target=windows\" in Comments 
 fig, axes = plt.subplots(1, 2, figsize=(16, 8))
 sns.countplot(ax=axes[0], data=submission, x="subreddit")
 sns.countplot(ax=axes[1], data=comments, x="subreddit")
-axes[0].set_title('Histogram of MacOS/Windows in Submission')
-axes[1].set_title('Histogram of MacOS/Windows in Comments')
+axes[0].set_title('Histogram of MacOS/Windows in Submission', size=20)
+axes[1].set_title('Histogram of MacOS/Windows in Comments', size=20)
+axes[0].set_ylabel('Count',fontsize=20)
+axes[1].set_ylabel('Count',fontsize=20)
+axes[0].set_xlabel('Subreddits', fontsize=20)
+axes[1].set_xlabel('Subreddits', fontsize=20)
 plt.tight_layout()
 plt.show()
-# =================================================================================
 
+# %%
+# =================================================================================
+fontsize = 20
 corpus = []
 new = submission[submission[target] == "MacOS"]['body'].str.split()
 corpus = [word for i in new for word in i]
@@ -191,16 +224,18 @@ counter = Counter(corpus)
 most = counter.most_common()
 nltk.download('averaged_perceptron_tagger')
 x, y = [], []
-for word, count in most[:80]:
-    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
+for word, count in most[:20]:
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN") or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(16, 10))
 sns.barplot(x=y, y=x)
-plt.title("The most occurrences of word in Submissions related to MacOS")
-plt.xlabel('Occurrences')
-plt.ylabel('Words')
+plt.title("The most occurrences of word in Submissions related to MacOS", size=20)
+plt.xlabel('Occurrences', fontsize=fontsize)
+plt.xticks(fontsize=fontsize)
+plt.yticks(fontsize=fontsize)
+plt.ylabel('Words', fontsize=fontsize)
 plt.show()
 
 corpus = []
@@ -216,16 +251,18 @@ counter = Counter(corpus)
 most = counter.most_common()
 
 x, y = [], []
-for word, count in most[:80]:
-    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
+for word, count in most[:20]:
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN") or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(16, 10))
 sns.barplot(x=y, y=x)
-plt.title("The most occurrences of word in Submissions related to Windows")
-plt.xlabel('Occurrences')
-plt.ylabel('Words')
+plt.title("The most occurrences of word in Submissions related to Windows", size=20)
+plt.xlabel('Occurrences', fontsize=fontsize)
+plt.xticks(fontsize=fontsize)
+plt.yticks(fontsize=fontsize)
+plt.ylabel('Words', fontsize=fontsize)
 plt.show()
 
 corpus = []
@@ -242,16 +279,18 @@ counter = Counter(corpus)
 most = counter.most_common()
 
 x, y = [], []
-for word, count in most[:80]:
-    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
+for word, count in most[:20]:
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN") or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(16, 10))
 sns.barplot(x=y, y=x)
-plt.title("The most occurrences of word in Comments related to MacOS")
-plt.xlabel('Occurrences')
-plt.ylabel('Words')
+plt.title("The most occurrences of word in Comments related to MacOS", size=20)
+plt.xlabel('Occurrences', fontsize=18)
+plt.xticks(fontsize=fontsize)
+plt.yticks(fontsize=fontsize)
+plt.ylabel('Words', fontsize=fontsize)
 plt.show()
 
 corpus = []
@@ -268,18 +307,20 @@ counter = Counter(corpus)
 most = counter.most_common()
 
 x, y = [], []
-for word, count in most[:80]:
-    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN")  or (nltk.pos_tag([word])[0][1] == 'VB'))):
+for word, count in most[:20]:
+    if ((word not in stop_words) and ((nltk.pos_tag([word])[0][1] == "NN") or (nltk.pos_tag([word])[0][1] == 'VB'))):
         x.append(word)
         y.append(count)
 
-plt.figure(figsize=(12, 8))
+plt.figure(figsize=(16, 10))
 sns.barplot(x=y, y=x)
-plt.title("The most occurrences of word in Comments related to Windows")
-plt.xlabel('Occurrences')
-plt.ylabel('Words')
+plt.title("The most occurrences of word in Comments related to Windows", size=20)
+plt.xlabel('Occurrences', fontsize=fontsize)
+plt.xticks(fontsize=fontsize)
+plt.yticks(fontsize=fontsize)
+plt.ylabel('Words', fontsize=fontsize)
 plt.show()
-
+#%%
 # function for drawing a cloud of frequently used words
 
 
@@ -301,9 +342,9 @@ def show_wordcloud(data, subreddit, post):
 
     wordcloud = wordcloud.generate(str(data))
 
-    plt.figure(1, figsize=(12, 12))
+    plt.figure(1, figsize=(8, 8))
     plt.axis('off')
-    plt.title(f"Word Cloud of {subreddit} in {post}")
+    plt.title(f"Word Cloud of {subreddit} in {post}", size=15)
     plt.imshow(wordcloud)
     plt.show()
 
