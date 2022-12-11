@@ -2,3 +2,5 @@ cleantext
 wordcloud
 textblob
 scispacy
+alibi
+IPython
