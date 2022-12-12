@@ -1,9 +1,6 @@
 # NLP-Final-Project-Group
 This is a repository for NLP class 2022.
 
-# ML2-Final-Project
-This is a repository for the Final Project of Machine Learning 2 (Deep Learning) 
-
 ## DATASET
 The data can be extracted using Reddit API, sourced from [Pushshift](https://files.pushshift.io/reddit/). Since the Pushshift API limits the number of 1000 data per request, it is necessary to apply multi-threaded downloads. PMAW (Pushshift Multithread API Wrapper) is a wrapper for the Pushshift API which uses multithreading to retrieve Reddit comments and submission
 
