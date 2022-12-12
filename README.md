@@ -14,3 +14,9 @@ The text evaluation would be gathered from two main subreddits: Windows and Mac 
 
 ## Implementation and Results
 The alibi implementation of the integrated gradients method is specific to TensorFlow and Keras models[8]. In this experiment, the embedding layer is involved in the gradient calculation as a baseline, which means we ensure that the attribution for tokens will be 0 if we use the embedding layer. The 0 attribution is due to integration between which is 0.
+
+![Results](images/pic1.png "Predicted sentiments from RoBERTa-base model")
+![Results](images/pic2.png " Predicted Sentiments from Distilling BERT base model")
+
+Above two pictures shows the IG results for two models. The sentiment of the sentence has been predicted from RoBERTa base model and the Distilling Bert base model. The words highlighted in green show us which words led the model to positive sentiment while the red words contributed to negative sentiment, the importance of word get from the different shades of color. 
+RoBERT base model is better than Distilling Bert base model because compared with movie reviews, the comments from social media are more similar to our data. In the meantime, the model performance is different too. Since we use the same model in tokenization as the training model, they do not have the same results in their tokens.
