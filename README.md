@@ -1,4 +1,4 @@
-# NLP-Final-Project-Group
+# Sentiment Analysis in Social Media 
 This is a repository for NLP class 2022.
 
 ## DATASET
