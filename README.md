@@ -1,7 +1,7 @@
 # Sentiment Analysis in Social Media 
 This is a repository for NLP class 2022.
 
-## DATASET
+## Dataset
 The data can be extracted using Reddit API, sourced from [Pushshift](https://files.pushshift.io/reddit/). Since the Pushshift API limits the number of 1000 data per request, it is necessary to apply multi-threaded downloads. PMAW (Pushshift Multithread API Wrapper) is a wrapper for the Pushshift API which uses multithreading to retrieve Reddit comments and submission
 
 There are nearly 100k observations from January 2021 through the end of October 2022. Some data preprocessing methods are applied to the dataset for EDA,  including changing all words to lowercase, tokenization, removing stopwords, and lemmatization using the NLTK package.
